@@ -49,8 +49,8 @@ module.exports = {
 
     // Paths
     assetsRoot: path.resolve(__dirname, '../dist'),
-    assetsSubDirectory: 'static',
-    assetsPublicPath: '/',
+    assetsSubDirectory: 'HIPO-Interpreter/static',
+    assetsPublicPath: '/HIPO-Interpreter',
 
     /**
      * Source Maps
