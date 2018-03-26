@@ -532,6 +532,7 @@ Par 00
           }
           p_index++;
         }
+        curr_addr++;
       }
 
       curr_addr = 0;
