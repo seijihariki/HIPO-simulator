@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>HIPO Interpreter Info</title>
+	<meta charset="UTF-8">
+</head>
+<body>
+<a href=".">Back to interpreter</a><br>
+Um código de exemplo - soma de números não negativos - (o mesmo do professor):<br><br>
+1 CEA Zero<br>
+CAE Soma<br>
+Leia Lei Num<br>
+Imp Num<br>
+CEA Num<br>
+DNe Fim<br>
+CEA Soma<br>
+Som Num<br>
+CAE Soma<br>
+Des Leia<br>
+Fim Imp Soma<br>
+Par 00<br>
+30 Zero 00<br>
+40 Soma 00<br>
+45 Num 00<br><br>
+<b>As diferenças entre o código de montagem original e do interpretador são exemplificadas aqui:</b><br><br>
+1 CEA Zero > O interpretador avalia e aceita nomes, como Zero; mas como não tem como saber onde colocar o comando na memória, a posição pode ser especificada, no começo da linha. O normal pro primeiro comando é 0.<br><br>
+CAE Soma > Não é necessário especificar o endereço dessa linha, pois é assumido que é no endereço que segue o do comando anterior.<br><br> 
+Leia Lei Num > O nome pro endereço, como Zero, Soma, Num, Leia e Fim, é posicionado no começo da linha, ou após o número de endereço, caso especificado.<br><br>
+Par 00 > É necessário especificar um endereço até para os comandos que não precisam de um, como Par e Nop. Mas o valor não importa.<br><br>
+40 Soma 00 > Não é possível criar uma variável não inicializada. o valor especificado após o nome será copiado no endereço de instrução atual<br><br>
+No fim, o formato é algo como: [Endereço da instrução - opcional] [Nome do endereço - opcional] {[Instrução, seguida de endereço] ou [Valor a ser colocado no endereço]}<br><br>
+<b>E, por fim, é possível inserir também código de máquina:</b><br><br>
+1 +1130<br>
++1240<br>
++3145<br>
++4145<br>
++1145<br>
++5611<br>
++1140<br>
++2145<br>
++1240<br>
++5103<br>
++4140<br>
++7000<br>
+30 +0000<br><br>
+No formato de: [Endereço da instrução - opcional] [Valor do endereço]<br>
+(É válido usar também '1 1130', apenas coloquei o '+' para mais similaridade ao código dado)
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <style>
+    textarea{
+        background-repeat: repeat;
+    }
+	#code{
+		background-image: url('code_bg.jpg');
+	}
+	#input{
+		background-image: url('input_bg.jpg');
+	}
+	#output{
+		background-image: url('output_bg.jpg');
+	}
+    input{
+        width: 50px;
+    }
+	</style>
+	<title>HIPO Interpreter</title>
+	<meta charset="UTF-8">
+</head>
+<body style="background-color: #f1f1ff">
+    <script src="hipo.js"></script>
+    <script src="https://cdn.jsdelivr.net/clipboard.js/1.5.8/clipboard.min.js"></script>
+    <script>
+        new Clipboard('.btn', {
+            text: function(trigger) {
+                return trigger.getAttribute('aria-label');
+            }
+        });
+        function transl_bkp()
+        {
+            translate(document.getElementById('code').value);
+            copyMachine();
+        }
+		
+		function changemem(addr)
+		{
+			var inp = prompt("Change value of address " + addr, memory[addr]);
+			if(inp == null)return;
+			if(!isNatural(inp))sendError("'" + inp + "' is not a number!!!");
+			else memory[addr] = parseFloat(inp);
+			updatemem();
+		}
+    </script>
+    <div id="header">
+        <button onclick="transl_bkp();">Translate</button>
+        <button onclick="start(document.getElementById('ips').value, document.getElementById('pip').value);">Run</button>
+        <button onclick="clearInterval(interval_id);">Stop</button>
+        <button onclick="step();">Step</button>
+        <button onclick="reset();">Reset</button>
+        <button onclick="window.location = 'info.html';">Info</button>
+        <button data-clipboard-target="#compiled">Copy memory</button><br>
+        Ips(instructions per second): <input type='number' id = "ips" value="50"></text>
+        Pointer position: <input onchange="pointer=parseInt(document.getElementById('pip').value);updatemem();" type='number' id = "pip" value="0"></text>
+        Accumulator: <input onchange="accum=parseInt(document.getElementById('acc').value);updatemem();" type='number' id = "acc" value="0"></text>
+        Reading pointer: <input onchange="leiptr=parseInt(document.getElementById('inpptr').value);updatemem();" type='number' id = "inpptr" value="0"></text>
+	</div>
+    <div id="body" style="width: 300px;">
+		<textarea rows="100" cols="30" id="code" style="float: left; resize: none; height: 500px;"></textarea>
+		<div id = "IO" style="float: right;">
+			<textarea cols="30" id="input" style="resize: none; height: 100px;"></textarea>
+			<textarea cols="30" id="output" style="resize: none; height: 100px;" readonly></textarea>
+                        <textarea id="compiled" hidden readonly></textarea>
+		</div>
+    </div>
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg .tg-6gs1{font-weight:bold;background-color:#cdcfff;text-align:center;vertical-align:top}
+.tg .tg-e8z9{background-color:#e2e3ff;text-align:center;vertical-align:top}
+.tg .tg-ipa7{background-color:#d7d8fd;text-align:center;vertical-align:top}
+.tg .pointed{background-color:#ffb3b3;text-align:center;vertical-align:top}
+.tg .tg-e2ck{background-color:#e2e3ff;text-align:center}
+@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;}}</style>
+<div class="tg-wrap"><table class="tg">
+  <tr>
+    <th class="tg-e8z9"></th>
+    <th class="tg-6gs1">0</th>
+    <th class="tg-6gs1">1</th>
+    <th class="tg-6gs1">2</th>
+    <th class="tg-6gs1">3</th>
+    <th class="tg-6gs1">4</th>
+    <th class="tg-6gs1">5</th>
+    <th class="tg-6gs1">6</th>
+    <th class="tg-6gs1">7</th>
+    <th class="tg-6gs1">8</th>
+    <th class="tg-6gs1">9</th>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">00</td>
+    <td id="add00" class="tg-ipa7" onclick="changemem(0);">+0000</td>
+    <td id="add01" class="tg-e8z9" onclick="changemem(1);">+0000</td>
+    <td id="add02" class="tg-ipa7" onclick="changemem(2);">+0000</td>
+    <td id="add03" class="tg-e8z9" onclick="changemem(3);">+0000</td>
+    <td id="add04" class="tg-ipa7" onclick="changemem(4);">+0000</td>
+    <td id="add05" class="tg-e8z9" onclick="changemem(5);">+0000</td>
+    <td id="add06" class="tg-ipa7" onclick="changemem(6);">+0000</td>
+    <td id="add07" class="tg-e8z9" onclick="changemem(7);">+0000</td>
+    <td id="add08" class="tg-ipa7" onclick="changemem(8);">+0000</td>
+    <td id="add09" class="tg-e8z9" onclick="changemem(9);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">10</td>
+    <td id="add10" class="tg-ipa7" onclick="changemem(10);">+0000</td>
+    <td id="add11" class="tg-e8z9" onclick="changemem(11);">+0000</td>
+    <td id="add12" class="tg-ipa7" onclick="changemem(12);">+0000</td>
+    <td id="add13" class="tg-e8z9" onclick="changemem(13);">+0000</td>
+    <td id="add14" class="tg-ipa7" onclick="changemem(14);">+0000</td>
+    <td id="add15" class="tg-e8z9" onclick="changemem(15);">+0000</td>
+    <td id="add16" class="tg-ipa7" onclick="changemem(16);">+0000</td>
+    <td id="add17" class="tg-e8z9" onclick="changemem(17);">+0000</td>
+    <td id="add18" class="tg-ipa7" onclick="changemem(18);">+0000</td>
+    <td id="add19" class="tg-e8z9" onclick="changemem(19);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">20</td>
+    <td id="add20" class="tg-ipa7" onclick="changemem(20);">+0000</td>
+    <td id="add21" class="tg-e8z9" onclick="changemem(21);">+0000</td>
+    <td id="add22" class="tg-ipa7" onclick="changemem(22);">+0000</td>
+    <td id="add23" class="tg-e8z9" onclick="changemem(23);">+0000</td>
+    <td id="add24" class="tg-ipa7" onclick="changemem(24);">+0000</td>
+    <td id="add25" class="tg-e8z9" onclick="changemem(25);">+0000</td>
+    <td id="add26" class="tg-ipa7" onclick="changemem(26);">+0000</td>
+    <td id="add27" class="tg-e8z9" onclick="changemem(27);">+0000</td>
+    <td id="add28" class="tg-ipa7" onclick="changemem(28);">+0000</td>
+    <td id="add29" class="tg-e8z9" onclick="changemem(29);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">30</td>
+    <td id="add30" class="tg-ipa7" onclick="changemem(30);">+0000</td>
+    <td id="add31" class="tg-e8z9" onclick="changemem(31);">+0000</td>
+    <td id="add32" class="tg-ipa7" onclick="changemem(32);">+0000</td>
+    <td id="add33" class="tg-e8z9" onclick="changemem(33);">+0000</td>
+    <td id="add34" class="tg-ipa7" onclick="changemem(34);">+0000</td>
+    <td id="add35" class="tg-e8z9" onclick="changemem(35);">+0000</td>
+    <td id="add36" class="tg-ipa7" onclick="changemem(36);">+0000</td>
+    <td id="add37" class="tg-e8z9" onclick="changemem(37);">+0000</td>
+    <td id="add38" class="tg-ipa7" onclick="changemem(38);">+0000</td>
+    <td id="add39" class="tg-e8z9" onclick="changemem(39);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">40</td>
+    <td id="add40" class="tg-ipa7" onclick="changemem(40);">+0000</td>
+    <td id="add41" class="tg-e8z9" onclick="changemem(41);">+0000</td>
+    <td id="add42" class="tg-ipa7" onclick="changemem(42);">+0000</td>
+    <td id="add43" class="tg-e8z9" onclick="changemem(43);">+0000</td>
+    <td id="add44" class="tg-ipa7" onclick="changemem(44);">+0000</td>
+    <td id="add45" class="tg-e8z9" onclick="changemem(45);">+0000</td>
+    <td id="add46" class="tg-ipa7" onclick="changemem(46);">+0000</td>
+    <td id="add47" class="tg-e8z9" onclick="changemem(47);">+0000</td>
+    <td id="add48" class="tg-ipa7" onclick="changemem(48);">+0000</td>
+    <td id="add49" class="tg-e8z9" onclick="changemem(49);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">50</td>
+    <td id="add50" class="tg-ipa7" onclick="changemem(50);">+0000</td>
+    <td id="add51" class="tg-e8z9" onclick="changemem(51);">+0000</td>
+    <td id="add52" class="tg-ipa7" onclick="changemem(52);">+0000</td>
+    <td id="add53" class="tg-e8z9" onclick="changemem(53);">+0000</td>
+    <td id="add54" class="tg-ipa7" onclick="changemem(54);">+0000</td>
+    <td id="add55" class="tg-e8z9" onclick="changemem(55);">+0000</td>
+    <td id="add56" class="tg-ipa7" onclick="changemem(56);">+0000</td>
+    <td id="add57" class="tg-e8z9" onclick="changemem(57);">+0000</td>
+    <td id="add58" class="tg-ipa7" onclick="changemem(58);">+0000</td>
+    <td id="add59" class="tg-e8z9" onclick="changemem(59);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">60</td>
+    <td id="add60" class="tg-ipa7" onclick="changemem(60);">+0000</td>
+    <td id="add61" class="tg-e8z9" onclick="changemem(61);">+0000</td>
+    <td id="add62" class="tg-ipa7" onclick="changemem(62);">+0000</td>
+    <td id="add63" class="tg-e8z9" onclick="changemem(63);">+0000</td>
+    <td id="add64" class="tg-ipa7" onclick="changemem(64);">+0000</td>
+    <td id="add65" class="tg-e8z9" onclick="changemem(65);">+0000</td>
+    <td id="add66" class="tg-ipa7" onclick="changemem(66);">+0000</td>
+    <td id="add67" class="tg-e8z9" onclick="changemem(67);">+0000</td>
+    <td id="add68" class="tg-ipa7" onclick="changemem(68);">+0000</td>
+    <td id="add69" class="tg-e8z9" onclick="changemem(69);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">70</td>
+    <td id="add70" class="tg-ipa7" onclick="changemem(70);">+0000</td>
+    <td id="add71" class="tg-e8z9" onclick="changemem(71);">+0000</td>
+    <td id="add72" class="tg-ipa7" onclick="changemem(72);">+0000</td>
+    <td id="add73" class="tg-e8z9" onclick="changemem(73);">+0000</td>
+    <td id="add74" class="tg-ipa7" onclick="changemem(74);">+0000</td>
+    <td id="add75" class="tg-e8z9" onclick="changemem(75);">+0000</td>
+    <td id="add76" class="tg-ipa7" onclick="changemem(76);">+0000</td>
+    <td id="add77" class="tg-e8z9" onclick="changemem(77);">+0000</td>
+    <td id="add78" class="tg-ipa7" onclick="changemem(78);">+0000</td>
+    <td id="add79" class="tg-e8z9" onclick="changemem(79);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">80</td>
+    <td id="add80" class="tg-ipa7" onclick="changemem(80);">+0000</td>
+    <td id="add81" class="tg-e8z9" onclick="changemem(81);">+0000</td>
+    <td id="add82" class="tg-ipa7" onclick="changemem(82);">+0000</td>
+    <td id="add83" class="tg-e8z9" onclick="changemem(83);">+0000</td>
+    <td id="add84" class="tg-ipa7" onclick="changemem(84);">+0000</td>
+    <td id="add85" class="tg-e8z9" onclick="changemem(85);">+0000</td>
+    <td id="add86" class="tg-ipa7" onclick="changemem(86);">+0000</td>
+    <td id="add87" class="tg-e8z9" onclick="changemem(87);">+0000</td>
+    <td id="add88" class="tg-ipa7" onclick="changemem(88);">+0000</td>
+    <td id="add89" class="tg-e8z9" onclick="changemem(89);">+0000</td>
+  </tr>
+  <tr>
+    <td class="tg-6gs1">90</td>
+    <td id="add90" class="tg-ipa7" onclick="changemem(90);">+0000</td>
+    <td id="add91" class="tg-e8z9" onclick="changemem(91);">+0000</td>
+    <td id="add92" class="tg-ipa7" onclick="changemem(92);">+0000</td>
+    <td id="add93" class="tg-e8z9" onclick="changemem(93);">+0000</td>
+    <td id="add94" class="tg-ipa7" onclick="changemem(94);">+0000</td>
+    <td id="add95" class="tg-e8z9" onclick="changemem(95);">+0000</td>
+    <td id="add96" class="tg-ipa7" onclick="changemem(96);">+0000</td>
+    <td id="add97" class="tg-e8z9" onclick="changemem(97);">+0000</td>
+    <td id="add98" class="tg-ipa7" onclick="changemem(98);">+0000</td>
+    <td id="add99" class="tg-e8z9" onclick="changemem(99);">+0000</td>
+  </tr> 
+</table> 
+</div>
+<!-- Start of StatCounter Code for Default Guide -->
+<script type="text/javascript">
+var sc_project=10844403;
+var sc_invisible=1;
+var sc_security="ac3851ff";
+var scJsHost = (("https:" == document.location.protocol) ?
+"https://secure." : "http://www.");
+document.write("<sc"+"ript type='text/javascript' src='" + scJsHost+
+"statcounter.com/counter/counter.js'></"+"script>");
+</script>
+<noscript><div class="statcounter"><a title="web statistics"
+href="http://statcounter.com/free-web-stats/" target="_blank"><img
+class="statcounter" src="http://c.statcounter.com/10844403/0/ac3851ff/1/"
+alt="web statistics"></a></div></noscript>
+<!-- End of StatCounter Code for Default Guide -->
+</body>
+</html>
