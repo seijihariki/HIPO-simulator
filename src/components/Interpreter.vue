@@ -20,6 +20,7 @@
           <button class="control" v-on:click="step" :disabled="running">Step</button>
           <button class="control" v-on:click="reset" :disabled="running">Reset</button>
           <button class="control" v-on:click="clear" :disabled="running">Clear</button>
+          <button class="control" v-on:click="() => inp = out = ''" :disabled="running">Clear IO</button>
           <button class="control" v-on:click="() => log = []" :disabled="running">Clear Log</button>
         </div>
         <div class="memorytable">
@@ -53,6 +54,7 @@
     <context-menu id="context-menu" ref="ctxMenu" @ctx-open="(locals) => menuData=locals">
       <li class="ctx-item" @click="() => ip = menuData.index">Move pointer to [{{menuData.index}}]</li>
       <li class="ctx-item" @click="() => {ip = menuData.index; run()}">Run from [{{menuData.index}}]</li>
+      <li class="ctx-item" @click="edit(menuData.index)">Edit value at [{{menuData.index}}]</li>
     </context-menu>
   </div>
 </template>
@@ -415,6 +417,17 @@ Par 00
     };
   },
   methods: {
+    /**
+     * Prompts user for new value for given memory address
+     */
+    edit: function(addr) {
+      var inp = parseInt(prompt(
+            'Enter value for address ' + this.formatNumber(addr), this.formatNumber(this.memory[addr])));
+          this.$set(this.memory, addr, inp || this.memory[addr]);
+          if (inp) info('memory[' + this.formatNumber(addr) + '] = ' + this.formatNumber(inp));
+          else error('No changes made to memory[' + this.formatNumber(addr) + ']');
+    },
+
     /**
      * Logs info message to internal log
      */
