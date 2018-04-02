@@ -4,7 +4,7 @@
       <div class="container vert third">
         <codemirror ref="editor_r" v-model="code" :options="cmOptions" class="editor"></codemirror>
         <textarea placeholder="Input" class="textfield inp" v-model="inp"></textarea>
-        <textarea placeholder="Output" class="textfield out" v-model="out"></textarea>
+        <textarea ref="out_f" placeholder="Output" class="textfield out" v-model="out"></textarea>
       </div>
       <div class="container vert two_thirds">
         <div class="valbar">
@@ -19,6 +19,8 @@
           <button class="control" v-on:click="stop" :disabled="!running">Stop</button>
           <button class="control" v-on:click="step" :disabled="running">Step</button>
           <button class="control" v-on:click="reset" :disabled="running">Reset</button>
+          <button class="control" v-on:click="clear" :disabled="running">Clear</button>
+          <button class="control" v-on:click="() => log = []" :disabled="running">Clear Log</button>
         </div>
         <div class="memorytable">
           <table class="tg">
@@ -33,14 +35,25 @@
               <td class="tg tg-header">
                 {{(ten - 1) * 10}}
               </td>
-              <td class="tg tg-item" v-for="unit in 10" :key="unit" :pointed="(ten - 1) * 10 + (unit - 1) == ip">
+              <td class="tg tg-item" v-for="unit in 10" :key="unit" :pointed="(ten - 1) * 10 + (unit - 1) == ip"
+                @contextmenu.prevent="$refs.ctxMenu.open($event, {index: (ten - 1) * 10 + (unit - 1)})">
                 {{memory_s[(ten - 1) * 10 + (unit - 1)]}}
               </td>
             </tr>
           </table>
         </div>
+        <div class="logarea">
+          <ul ref="log_area">
+            <li :class="{error: entry.type == 'error'}" v-for="entry in log" :key="entry.index">{{entry.message}}</li>
+          </ul>
+        </div>
       </div>
     </div>
+
+    <context-menu id="context-menu" ref="ctxMenu" @ctx-open="(locals) => menuData=locals">
+      <li class="ctx-item" @click="() => ip = menuData.index">Move pointer to [{{menuData.index}}]</li>
+      <li class="ctx-item" @click="() => {ip = menuData.index; run()}">Run from [{{menuData.index}}]</li>
+    </context-menu>
   </div>
 </template>
 
@@ -52,6 +65,8 @@ import "codemirror/lib/codemirror.css";
 
 import "codemirror/mode/javascript/javascript.js";
 import "codemirror/theme/monokai.css";
+
+import contextMenu from "vue-context-menu";
 
 // Reserved keywords (Translates to key in cmds)
 var lang = {
@@ -146,11 +161,15 @@ CodeMirror.defineMode("hipo", () => {
   };
 });
 
+// Generate empty menu data
+const newMenuData = () => ({ index: 0 })
+
 // Vue
 export default {
   name: "Interpreter",
   components: {
-    codemirror
+    codemirror,
+    contextMenu
   },
   data() {
     return {
@@ -203,7 +222,13 @@ Par 00
       out: "",
 
       // Label dictionary
-      labels: {}
+      labels: {},
+
+      // Log
+      log: [],
+
+      // Context menu data
+      menuData: newMenuData()
     };
   },
   watch: {
@@ -294,10 +319,11 @@ Par 00
           var val = parseInt(this.inp.split("\n")[this.rp]);
           if (isNaN(val)) {
             // ERROR: INVALID INPUT
-            console.error("ERROR: INVALID INPUT")
+            console.error("ERROR: INVALID INPUT");
+            this.error("ERROR: Couldn't read input from rip=" + this.rp + "!")
             return false;
           } else {
-            console.log("Reading " + val + " into " + addr)
+            console.log("Reading " + val + " into " + addr);
             this.$set(this.memory, addr, val);
             this.rp++;
             this.ip++;
@@ -311,6 +337,9 @@ Par 00
         func: addr => {
           this.out += this.memory[addr] + "\n";
           this.ip++;
+          // Scroll to bottom of output
+          var output_textarea = this.$refs.out_f;
+          output_textarea.scrollTop = output_textarea.scrollHeight;
           return true;
         }
       },
@@ -387,12 +416,47 @@ Par 00
   },
   methods: {
     /**
+     * Logs info message to internal log
+     */
+    info: function(message) {
+      this.log.push({
+        type: "info",
+        message: message,
+        index: this.log.length
+      });
+      this.$nextTick(() => {
+        // Scroll log area to the bottom
+        var log_area = this.$refs.log_area;
+        log_area.scrollTop = log_area.scrollHeight;
+      })
+    },
+
+    /**
+     * Logs error message to internal log
+     */
+    error: function(message) {
+      this.log.push({
+        type: "error",
+        message: message,
+        index: this.log.length
+      });
+      this.$nextTick(() => {
+        // Scroll log area to the bottom
+        var log_area = this.$refs.log_area;
+        log_area.scrollTop = log_area.scrollHeight;
+      })
+    },
+
+    /**
      * Runs program at ips
      */
     run: function() {
       if (!this.timeout) {
+        this.info("Started running!");
         this.out = "";
         this.loop();
+      } else {
+        this.info("Already running!");
       }
     },
     /**
@@ -404,7 +468,10 @@ Par 00
         this.timeout = setTimeout(() => {
           this.loop();
         }, 1000 / this.ips);
-      else this.timeout = null;
+      else {
+        this.info("Program stopped!");
+        this.timeout = null;
+      }
     },
 
     /**
@@ -423,6 +490,19 @@ Par 00
       for (var i = 0; i < 100; i++) this.$set(this.memory, i, 0);
       this.acc = this.rp = this.ip = 0;
       this.out = "";
+      this.log = []
+    },
+
+    /**
+     * Clears everything!
+     */
+    clear: function() {
+      for (var i = 0; i < 100; i++) this.$set(this.memory, i, 0);
+      this.acc = this.rp = this.ip = 0;
+      this.out = "";
+      this.inp = "";
+      this.code = "";
+      this.log = []
     },
 
     /**
@@ -440,9 +520,10 @@ Par 00
 
       // Check if instruction is valid
       if (!cmd) {
-        console.log(cmval.toString() + "XX")
+        console.log(cmval.toString() + "XX");
         // TODO: Handle errors
         console.error("ERROR: INVALID INSTRUCTION");
+        this.error("Invalid instruction " + this.formatNumber(instr))
         return false;
       }
 
@@ -451,6 +532,8 @@ Par 00
 
     /**
      * Generates number string in (+|-)XXXX format from integer
+     *
+     * @param {int} number Number to print out
      */
     formatNumber: function(number) {
       var numstr = Math.abs(number).toString();
@@ -466,6 +549,7 @@ Par 00
      * Translates to machine code
      */
     translate: function() {
+      this.info("Started translating...")
       console.log("Translating...");
       var code = this.code;
 
@@ -488,11 +572,11 @@ Par 00
 
         // If line is empty go to next instruction
         if (!line.length) continue;
-        
-        lines.push(line)
+
+        lines.push(line);
       }
 
-      // Load labels      
+      // Load labels
       for (var line_i in lines) {
         var line = lines[line_i];
 
@@ -509,6 +593,7 @@ Par 00
           if (addr > 99) {
             // ERROR: INVALID ADDRESS
             console.error("ERROR: INVALID ADDRESS");
+            this.error("ERROR: Invalid address " + this.formatNumber(addr))
             return;
           }
           curr_addr = addr;
@@ -518,15 +603,16 @@ Par 00
 
         // Check if next is label
         var label = parts[p_index];
-        console.log(label)
+        console.log(label);
         if (/^[a-zA-Z_]\w*$/.test(label) && !lang[label]) {
-          console.log("Is label!")
+          console.log("Is label!");
           if (this.labels[label]) {
             // ERROR: ALREADY EXISTING
             console.error("ERROR: ALREADY EXISTING");
+            this.error("ERROR: Label '" + toString(label) + "' already exists!")
             return;
           } else {
-            console.log("Registering label " + label + " at " + curr_addr)
+            console.log("Registering label " + label + " at " + curr_addr);
             // Save label
             this.labels[label] = curr_addr;
           }
@@ -555,6 +641,7 @@ Par 00
           if (addr > 99) {
             // ERROR: INVALID ADDRESS
             console.error("ERROR: INVALID ADDRESS");
+            this.error("ERROR: Invalid address " + this.formatNumber(addr))
             return;
           }
           curr_addr = addr;
@@ -565,12 +652,16 @@ Par 00
 
         // Check if next is label
         var label = parts[p_index];
-        if (/^[a-zA-Z_]\w*$/.test(label) && !lang[label] && this.labels[label]) {
+        if (
+          /^[a-zA-Z_]\w*$/.test(label) &&
+          !lang[label] &&
+          this.labels[label]
+        ) {
           format.push("label");
           p_index++;
         }
 
-        console.log(parts[p_index])
+        console.log(parts[p_index]);
 
         // Next must be command or value
         if (/^(\+|\-)?[0-9]{1,4}$/.test(parts[p_index])) {
@@ -581,6 +672,7 @@ Par 00
           if (parts[p_index + 1]) {
             // ERROR: UNKNOWN INSTRUCTION FORMAT
             console.error("ERROR: UNKNOWN INSTRUCTION FORMAT");
+            this.error("ERROR: Line '" + line + "' could not be understood!")
             return;
           }
           format.push("value");
@@ -597,11 +689,11 @@ Par 00
 
           format.push("command");
 
-          console.log(val)
+          console.log(val);
 
           // If there is another argument (address)
           if (parts[p_index + 1]) {
-            console.log()
+            console.log();
             // Is it a label?
             if (this.labels[parts[p_index + 1]])
               // If so, get value from label
@@ -612,12 +704,14 @@ Par 00
               if (isNaN(address)) {
                 // ERROR: INVALID LABEL OR ADDRESS
                 console.error("ERROR: INVALID LABEL OR ADDRESS");
+                this.error("ERROR: Couldn't find label or address '" + parts[p_index + 1] + "'")
                 return;
               }
 
               if (address > 99) {
                 // ERROR: INVALID ADDRESS
                 console.error("ERROR: INVALID ADDRESS");
+                this.error("ERROR: Invalid address " + this.formatNumber(address))
                 return;
               }
 
@@ -630,6 +724,7 @@ Par 00
           if (parts[p_index + 2]) {
             // ERROR: UNKNOWN INSTRUCTION FORMAT
             console.error("ERROR: UNKNOWN INSTRUCTION FORMAT");
+            this.error("ERROR: Line '" + line + "' could not be understood!")
             return;
           }
           console.log("At " + curr_addr + " is " + this.formatNumber(val));
@@ -638,6 +733,7 @@ Par 00
         } else {
           // ERROR: INVALID VALUE OR COMMAND
           console.error("ERROR: INVALID VALUE OR COMMAND");
+          this.error("ERROR: '" + parts[p_index] + "' could not be understood as a command nor a value!");
           return;
         }
 
@@ -786,6 +882,32 @@ input.register {
   background-color: #cdcfff;
   text-align: center;
   vertical-align: top;
+}
+
+.logarea {
+  flex: 1;
+  display: flex;
+}
+
+.logarea ul {
+  border: #adadad solid 1px;
+  flex: 1;
+  overflow: hidden;
+  overflow-y: scroll;
+  list-style-type: none;
+  padding: 0;
+}
+
+.logarea ul li {
+  border-bottom: #ddd solid 1px;
+  padding: .3em;
+  font-size: .9em;
+}
+
+.logarea ul li.error {
+  color: #f22;
+  background-color: #fee;
+  border-bottom: #fdd solid 1px;
 }
 </style>
 
