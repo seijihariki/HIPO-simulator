@@ -1,6 +1,6 @@
-# hipo-interpreter
+# hipo-simulator
 
-> A web-based hipo interpreter
+> A web-based hipo simulator
 
 ## Build Setup
 
