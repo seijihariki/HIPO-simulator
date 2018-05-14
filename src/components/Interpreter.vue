@@ -51,7 +51,7 @@
       </div>
     </div>
 
-    <context-menu id="context-menu" ref="ctxMenu" @ctx-open="(locals) => menuData=locals">
+    <context-menu id="context-menu" ref="ctxMenu" @click="edit(menuData.index)" @ctx-open="(locals) => menuData=locals">
       <li class="ctx-item" @click="() => ip = menuData.index">Move pointer to [{{menuData.index}}]</li>
       <li class="ctx-item" @click="() => {ip = menuData.index; run()}">Run from [{{menuData.index}}]</li>
       <li class="ctx-item" @click="edit(menuData.index)">Edit value at [{{menuData.index}}]</li>
@@ -203,21 +203,7 @@ export default {
       cmds: {},
 
       // Code editor value
-      code: `1 CEA Zero
-CAE Sum
-Back Lei Num
-Imp Num
-CEA Num
-DNe End
-CEA Sum
-Som Num
-CAE Sum
-Des Back
-End Imp Sum
-Par 00
-30 Zero 00
-40 Sum 00
-45 Num 00`,
+      code: ``,
 
       // Input and output field values
       inp: "",
